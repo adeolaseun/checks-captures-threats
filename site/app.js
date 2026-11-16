@@ -5,7 +5,7 @@
   var NAME = E.NAME, viewToken = 0;
   function strip(s) { return s.replace(/[+#!?]/g, ''); }
   function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
-  function pcSet(set, color, type) { return '<svg class="pc ' + color + '" viewBox="0 0 45 45" aria-hidden="true"><use href="#' + (set === 'club' ? 'pc' : set) + '-' + type + '"/></svg>'; }
+  function pcSet(set, color, type) { var id = set === 'club' ? 'pc-' + type : set === 'classic' ? 'classic-' + color + type : set + '-' + type; return '<svg class="pc ' + color + ' set-' + set + '" viewBox="0 0 45 45" aria-hidden="true"><use href="#' + id + '"/></svg>'; }
   function pc(color, type) { return pcSet(S.set.pieces || 'pebble', color, type); }
   /* A row of piece sets to choose from. onPick runs after the choice is saved. */
   function piecePicker(onPick) {
@@ -20,12 +20,26 @@
     return box;
   }
 
+  /* A row of board designs. The choice is applied to the whole page through data-board on <html>. */
+  function applyBoard() { document.documentElement.setAttribute('data-board', S.set.board || 'club'); }
+  function boardPicker(onPick) {
+    var box = el('div', 'sets'); box.setAttribute('role', 'radiogroup'); box.setAttribute('aria-label', 'Board design');
+    BoardStyles.forEach(function (bs) {
+      var on = (S.set.board || 'club') === bs.id, set = S.set.pieces || 'pebble';
+      var b = el('button', 'setcard' + (on ? ' on' : ''), '<span class="swatch" data-board="' + bs.id + '"><i class="l">' + pcSet(set, 'w', 'k') + '</i><i class="d">' + pcSet(set, 'b', 'q') + '</i><i class="l">' + pcSet(set, 'b', 'n') + '</i><i class="d">' + pcSet(set, 'w', 'p') + '</i></span><span class="nm">' + bs.name + '</span><span class="nt">' + bs.note + '</span>');
+      b.type = 'button'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', on ? 'true' : 'false');
+      b.addEventListener('click', function () { if (S.set.board === bs.id) return; S.set.board = bs.id; applyBoard(); save(); onPick(); });
+      box.appendChild(b);
+    });
+    return box;
+  }
+
   var LESSONS = [];
   C.UNITS.forEach(function (u, ui) { u.lessons.forEach(function (l) { l.unit = u.title; l.unitNo = ui + 1; l.no = LESSONS.length + 1; LESSONS.push(l); }); });
 
   // ---------------- Progress: this browser first, the Claude account when available ----------------
   var KEY = 'cct-progress-v1';
-  var S = { lessons: {}, puzzles: {}, play: null, set: { level: 2, color: 'w', guard: true, threats: false, pieces: 'pebble', pv: 3 }, t: 0 };
+  var S = { lessons: {}, puzzles: {}, play: null, set: { level: 2, color: 'w', guard: true, threats: false, pieces: 'pebble', board: 'club', pv: 3 }, t: 0 };
   var remote = { ref: null, busy: false, dirty: false, timer: 0, ok: false };
 
   function merge(o) {
@@ -33,7 +47,7 @@
     Object.keys(o.lessons || {}).forEach(function (k) { S.lessons[k] = true; });
     Object.keys(o.puzzles || {}).forEach(function (k) { var a = S.puzzles[k], b = o.puzzles[k]; if (b && (!a || (b.clean && !a.clean))) S.puzzles[k] = { done: true, clean: !!b.clean }; });
     if ((o.t || 0) > (S.t || 0)) {
-      if (o.set) { ['level', 'color', 'guard', 'threats', 'pieces'].forEach(function (k) { if (k in o.set) S.set[k] = o.set[k]; }); if (o.set.pv !== 3) S.set.pieces = 'pebble'; }
+      if (o.set) { ['level', 'color', 'guard', 'threats', 'pieces', 'board'].forEach(function (k) { if (k in o.set) S.set[k] = o.set[k]; }); if (o.set.pv !== 3) S.set.pieces = 'pebble'; }
       if (o.play && C.DRILLS[o.play.drill] && Array.isArray(o.play.moves)) S.play = o.play;
       S.t = o.t;
     }
@@ -299,7 +313,7 @@
       '<div class="tally"><div><b>' + doneN + '/' + LESSONS.length + '</b>lessons</div><div><b>' + pzN + '/' + C.PUZZLES.length + '</b>puzzles</div></div></div>';
     if (next) html += '<div class="nextcard"><div class="mini"></div><div><div class="eyebrow">' + (doneN ? 'Next lesson' : 'Start here') + ' · ' + next.no + ' of ' + LESSONS.length + '</div><h2>' + next.title + '</h2><p>' + next.blurb + '</p><a class="btn primary" href="#lesson-' + next.id + '">' + (doneN ? 'Continue' : 'Start') + '</a></div></div>';
     else html += '<div class="nextcard"><div class="mini"></div><div><div class="eyebrow">Course complete</div><h2>Now use it in games</h2><p>Every lesson is done. Play the bot with blunder check off and see how many moves you can go without a question mark.</p><a class="btn primary" href="#play">Play</a></div></div>';
-    html += '</section><section class="unit" id="pieces-pick"><div class="unit-h"><span class="n">Your set</span><h2>Pieces</h2></div><div class="pickhost"></div></section>';
+    html += '</section><section class="unit" id="pieces-pick"><div class="unit-h"><span class="n">Your set</span><h2>Pieces</h2></div><div class="pickhost"></div></section><section class="unit" id="board-pick"><div class="unit-h"><span class="n">Your set</span><h2>Board</h2></div><div class="boardhost"></div></section>';
     C.UNITS.forEach(function (u, ui) {
       html += '<section class="unit"><div class="unit-h"><span class="n">Part ' + (ui + 1) + '</span><h2>' + u.title + '</h2></div><ul class="lessons">';
       u.lessons.forEach(function (l) {
@@ -311,7 +325,9 @@
     app.innerHTML = html;
     var fen = next ? next.steps[0].fen : C.START, g = new Chess(fen);
     new Board(app.querySelector('.mini'), true).show(g, { flip: g.turn() === 'b' });
-    app.querySelector('.pickhost').appendChild(piecePicker(function () { var y = window.scrollY; home(); window.scrollTo(0, y); }));
+    var rehome = function () { var y = window.scrollY; home(); window.scrollTo(0, y); };
+    app.querySelector('.pickhost').appendChild(piecePicker(rehome));
+    app.querySelector('.boardhost').appendChild(boardPicker(rehome));
   }
 
   function lesson(id) {
@@ -374,7 +390,8 @@
       '<label class="check" for="o-threats"><input type="checkbox" id="o-threats"><span><b>Show loose pieces.</b> Red dot: mine can be won. Green dot: theirs can.</span></label>' +
       '</div></fieldset>' +
       '<fieldset><legend>Start a new game from</legend><div class="drills"></div></fieldset>' +
-      '<fieldset><legend>Pieces</legend><div class="pickhost"></div></fieldset></div></div>';
+      '<fieldset><legend>Pieces</legend><div class="pickhost"></div></fieldset>' +
+      '<fieldset><legend>Board</legend><div class="boardhost"></div></fieldset></div></div>';
     var q = function (s) { return app.querySelector(s); };
     var board = new Board(q('.bwrap')), fb = q('.fb');
     function setFb(kind, html) { fb.className = 'fb' + (kind ? ' ' + kind : ''); fb.innerHTML = html || ''; }
@@ -388,7 +405,7 @@
       b.addEventListener('click', function () { plainHash(); start(k); }); q('.drills').appendChild(b);
     });
     function plainHash() { if (location.hash !== '#play') { try { history.replaceState(null, '', '#play'); } catch (e) { /* keep the current address */ } } }
-    function mountPicker() { var h = q('.pickhost'); h.innerHTML = ''; h.appendChild(piecePicker(function () { mountPicker(); render(); })); }
+    function mountPicker() { var h = q('.pickhost'), bh = q('.boardhost'), again = function () { mountPicker(); render(); }; h.innerHTML = ''; h.appendChild(piecePicker(again)); bh.innerHTML = ''; bh.appendChild(boardPicker(again)); }
     mountPicker();
     q('#b-new').addEventListener('click', function () { start(drillId); });
     q('#b-hint').addEventListener('click', hint);
@@ -553,6 +570,8 @@
 
   try { var raw = localStorage.getItem(KEY); if (raw) merge(JSON.parse(raw)); } catch (e) { /* start fresh */ }
   if (!PieceSets.some(function (p) { return p.id === S.set.pieces; })) S.set.pieces = 'pebble';
+  if (!BoardStyles.some(function (b) { return b.id === S.set.board; })) S.set.board = 'club';
+  applyBoard();
   syncLabel();
   window.addEventListener('hashchange', route);
   route();

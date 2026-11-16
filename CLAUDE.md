@@ -30,7 +30,8 @@ site/            everything that gets deployed
   app.js         interface: routing, board, lesson and puzzle runner, play mode, saving
   engine.js      search and evaluation for the bot and coach (own 0x88 engine)
   content.js     lessons, puzzles, drill positions
-  pieces.js      the other piece sets; "pebble" is the active default
+  pieces.js      the other piece sets and the board list; "pebble" is the active default
+  pieces-classic.js  the "Classic" set (cburnett, GPLv2+, keep the header)
   chess.js       chess.js 0.10.3 (BSD licence, keep the header): rules and notation for the UI
   sw.js, manifest.webmanifest, icons/
 tools/
@@ -54,6 +55,8 @@ npm test         # content checks + perft; expect "ALL OK" and five "ok" lines
 - `chess.js` is slow for search, which is why `engine.js` has its own move generator. Do not route the bot through chess.js.
 - Saved progress lives under the `localStorage` key `cct-progress-v1`. Keep that key and shape, or his progress is wiped.
 - The layout must never exceed the viewport width (an earlier bug let the move list widen the page and stretch the board). `.stage` uses `minmax(0,1fr)` for this; keep it.
+- Board designs are CSS only: `data-board` on `<html>` sets `--sq-l` / `--sq-d` (see "Board designs" in `index.html`); the list is `BoardStyles` in `pieces.js`. Walnut paints the board as one background and clears the squares.
+- Piece and board art must be original or open-licensed. No copies of Chess.com, Duolingo or other proprietary sets.
 - He chooses designs from samples before anything is built. Show options first for any visual change.
 
 ## Things he should know
@@ -63,6 +66,5 @@ npm test         # content checks + perft; expect "ALL OK" and five "ok" lines
 
 ## Possible next steps (not requested yet)
 
-- Darker or wood board option to match the Pebble pieces.
 - Remove the unused piece sets and the picker if he settles on Pebble.
 - Drag-to-move in addition to tap-tap.

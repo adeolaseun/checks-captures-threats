@@ -20,7 +20,7 @@
 :root{
   --paper:#EDF0E7; --card:#F9FAF5; --ink:#16241E; --muted:#55645C; --line:#CDD5C8;
   --accent:#F2B705; --accent-ink:#1B1600;
-  --sq-l:#E6EAD9; --sq-d:#6C9582; --pw:#FFFDF4; --pb:#18241E;
+  --club-l:#E6EAD9; --club-d:#6C9582; --pw:#FFFDF4; --pb:#18241E;
   --good:#1B7A4B; --bad:#BF3A21; --warn:#A86300;
   --display:"Big Shoulders Display","Arial Narrow","Helvetica Neue",Arial,sans-serif;
   --body:"Hanken Grotesk",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
@@ -31,7 +31,7 @@
     color-scheme:dark;
     --paper:#0D1411; --card:#151F1A; --ink:#E5EBE3; --muted:#93A39A; --line:#27352E;
     --accent:#F5C422; --accent-ink:#1B1600;
-    --sq-l:#C5CEBB; --sq-d:#527868; --pw:#FFFDF4; --pb:#141E19;
+    --club-l:#C5CEBB; --club-d:#527868; --pw:#FFFDF4; --pb:#141E19;
     --good:#5CC48C; --bad:#F2725C; --warn:#E6A63C;
   }
 }
@@ -39,7 +39,7 @@
   color-scheme:dark;
   --paper:#0D1411; --card:#151F1A; --ink:#E5EBE3; --muted:#93A39A; --line:#27352E;
   --accent:#F5C422; --accent-ink:#1B1600;
-  --sq-l:#C5CEBB; --sq-d:#527868; --pw:#FFFDF4; --pb:#141E19;
+  --club-l:#C5CEBB; --club-d:#527868; --pw:#FFFDF4; --pb:#141E19;
   --good:#5CC48C; --bad:#F2725C; --warn:#E6A63C;
 }
 *{box-sizing:border-box}
@@ -110,6 +110,21 @@ p{margin:0}
 .ptile.clean{border-color:var(--ink)} .ptile.clean .s{color:var(--good)}
 .ptile.done .s{color:var(--warn)}
 
+/* Board designs: data-board on <html> picks the square colours; picker swatches carry their own data-board. */
+:root,[data-board="club"]{--sq-l:var(--club-l);--sq-d:var(--club-d)}
+:root[data-board="walnut"],[data-board="walnut"]{--sq-l:#E2C9A1;--sq-d:#8B5B3E}
+:root[data-board="sand"],[data-board="sand"]{--sq-l:#F0D9B5;--sq-d:#B58863}
+:root[data-board="slate"],[data-board="slate"]{--sq-l:#DEE3E6;--sq-d:#7F98A6}
+:root[data-board="midnight"],[data-board="midnight"]{--sq-l:#8A95A6;--sq-d:#4B566A}
+/* Walnut paints the whole board as one sheet (grain over a checker) and leaves the squares clear. */
+:root[data-board="walnut"] .board,.swatch[data-board="walnut"]{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='480' height='480'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.2 .006' numOctaves='3' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 .28 0 0 0 0 .15 0 0 0 0 .06 .9 0 0 0 -.26'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E") 0 0/100% 100%,repeating-conic-gradient(var(--sq-d) 0 25%,var(--sq-l) 0 50%) 0 0/25% 25%}
+.setcard .swatch[data-board="walnut"]{background-size:100% 100%,50% 200%}
+:root[data-board="walnut"] .board .sq,.setcard .swatch[data-board="walnut"] i{background:transparent}
+/* Piece palettes for the sets that bring their own colours. */
+.pc.w.set-staunton{--f:#FBF8F1;--s:#D5CDBD;--o:#2B2723;--d:#2B2723}
+.pc.b.set-staunton{--f:#4A4541;--s:#2A2725;--o:#141211;--d:#8E877F}
+.pc.w.set-marble{--f:#F4EEE2;--o:#8C8271}
+.pc.b.set-marble{--f:#3A3633;--o:#0F0E0D}
 /* Board */
 .stage{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start}
 .stage>*{min-width:0}
@@ -227,6 +242,7 @@ legend{font-family:var(--mono);font-size:12px;color:var(--muted);padding:0 6px}
 </div></header>
 <main id="app"></main>
 <script src="chess.js"></script>
+<script src="pieces-classic.js"></script>
 <script src="pieces.js"></script>
 <script src="engine.js"></script>
 <script src="content.js"></script>
