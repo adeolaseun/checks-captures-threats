@@ -1,0 +1,25 @@
+{
+  "name": "Checks, Captures, Threats",
+  "short_name": "Chess Coach",
+  "description": "Chess lessons, puzzles and a sparring bot with a blunder check.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0D1411",
+  "theme_color": "#0D1411",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

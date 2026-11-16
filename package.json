@@ -1,0 +1,10 @@
+{
+  "name": "checks-captures-threats",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Chess trainer: lessons, puzzles and a sparring bot. Static site, no build step.",
+  "scripts": {
+    "start": "python3 -m http.server 8080 --directory site",
+    "test": "node tools/test.js && node tools/perft.js"
+  }
+}
